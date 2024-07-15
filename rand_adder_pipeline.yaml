@@ -1,0 +1,201 @@
+# PIPELINE DEFINITION
+# Name: rand-adder-pipeline
+# Inputs:
+#    a: int
+#    b: int
+# Outputs:
+#    Output: int
+components:
+  comp-adder:
+    executorLabel: exec-adder
+    inputDefinitions:
+      parameters:
+        a:
+          parameterType: NUMBER_INTEGER
+        b:
+          parameterType: NUMBER_INTEGER
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_INTEGER
+  comp-rand:
+    executorLabel: exec-rand
+    inputDefinitions:
+      parameters:
+        a:
+          parameterType: NUMBER_INTEGER
+        b:
+          parameterType: NUMBER_INTEGER
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_INTEGER
+  comp-rand-2:
+    executorLabel: exec-rand-2
+    inputDefinitions:
+      parameters:
+        a:
+          parameterType: NUMBER_INTEGER
+        b:
+          parameterType: NUMBER_INTEGER
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_INTEGER
+deploymentSpec:
+  executors:
+    exec-adder:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - adder
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef adder(a: int, b: int) -> int:\n    return a + b\n\n"
+        image: python:3.12
+    exec-rand:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - rand
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef rand(a: int, b: int) -> int:\n    import random\n    return random.randint(a,\
+          \ b) if a < b else random.randint(b, a)\n\n"
+        image: python:3.12
+    exec-rand-2:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - rand
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef rand(a: int, b: int) -> int:\n    import random\n    return random.randint(a,\
+          \ b) if a < b else random.randint(b, a)\n\n"
+        image: python:3.12
+pipelineInfo:
+  name: rand-adder-pipeline
+root:
+  dag:
+    outputs:
+      parameters:
+        Output:
+          valueFromParameter:
+            outputParameterKey: Output
+            producerSubtask: adder
+    tasks:
+      adder:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-adder
+        dependentTasks:
+        - rand
+        - rand-2
+        inputs:
+          parameters:
+            a:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: rand
+            b:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: rand-2
+        taskInfo:
+          name: adder
+      rand:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-rand
+        inputs:
+          parameters:
+            a:
+              componentInputParameter: a
+            b:
+              componentInputParameter: b
+        taskInfo:
+          name: rand
+      rand-2:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-rand-2
+        inputs:
+          parameters:
+            a:
+              componentInputParameter: a
+            b:
+              componentInputParameter: b
+        taskInfo:
+          name: rand-2
+  inputDefinitions:
+    parameters:
+      a:
+        parameterType: NUMBER_INTEGER
+      b:
+        parameterType: NUMBER_INTEGER
+  outputDefinitions:
+    parameters:
+      Output:
+        parameterType: NUMBER_INTEGER
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.8.0

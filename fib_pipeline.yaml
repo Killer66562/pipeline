@@ -1,0 +1,81 @@
+# PIPELINE DEFINITION
+# Name: fib-pipeline
+# Inputs:
+#    n: int
+# Outputs:
+#    Output: int
+components:
+  comp-fib:
+    executorLabel: exec-fib
+    inputDefinitions:
+      parameters:
+        n:
+          parameterType: NUMBER_INTEGER
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_INTEGER
+deploymentSpec:
+  executors:
+    exec-fib:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - fib
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.8.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef fib(n: int) -> int:\n    if n < 0:\n        raise ValueError(\"\
+          n cannot be smaller than 0!\")\n    return n if n == 0 or n == 1 else fib(n-1)\
+          \ + fib(n-2)\n\n"
+        image: python:3.9
+pipelineInfo:
+  name: fib-pipeline
+root:
+  dag:
+    outputs:
+      parameters:
+        Output:
+          valueFromParameter:
+            outputParameterKey: Output
+            producerSubtask: fib
+    tasks:
+      fib:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-fib
+        inputs:
+          parameters:
+            n:
+              componentInputParameter: n
+        taskInfo:
+          name: fib
+  inputDefinitions:
+    parameters:
+      n:
+        parameterType: NUMBER_INTEGER
+  outputDefinitions:
+    parameters:
+      Output:
+        parameterType: NUMBER_INTEGER
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.8.0
