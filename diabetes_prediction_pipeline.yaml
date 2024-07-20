@@ -224,7 +224,7 @@ deploymentSpec:
           \ train_model_output: Output[Artifact]):\n    import pandas as pd\n    from\
           \ sklearn.linear_model import LogisticRegression\n    import joblib\n\n\
           \    x_train = pd.read_csv(x_train.path)\n    y_train = pd.read_csv(y_train.path)\n\
-          \n    model = LogisticRegression(random_state=0, max_iter=100) # 100 times\
+          \n    model = LogisticRegression(random_state=0, max_iter=10000) # 100 times\
           \ for test p.s. it is 10000 times in beginning\n    model.fit(x_train, y_train)\n\
           \n    #model_path = './diabete_prediction_model.pkl'\n    joblib.dump(model,\
           \ train_model_output.path)\n\n"

@@ -76,7 +76,7 @@ def train_model(x_train: Input[Artifact], y_train: Input[Artifact], train_model_
     x_train = pd.read_csv(x_train.path)
     y_train = pd.read_csv(y_train.path)
     
-    model = LogisticRegression(random_state=0, max_iter=100) # 100 times for test p.s. it is 10000 times in beginning
+    model = LogisticRegression(random_state=0, max_iter=10000) # 100 times for test p.s. it is 10000 times in beginning
     model.fit(x_train, y_train)
     
     #model_path = './diabete_prediction_model.pkl'
