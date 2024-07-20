@@ -20,8 +20,6 @@ def load_data(data_output: Output[Artifact]):
     
     url = "https://raw.githubusercontent.com/daniel88516/diabetes-data/main/10k.csv"
     df_data = pd.read_csv(url)
-
-    df_data = df_data[0:5000]
     
     df_data = df_data.drop(df_data[df_data['diabetes'] == 'No Info'].index)
     df_data = df_data[['gender','age', 'bmi', 'HbA1c_level', 'blood_glucose_level', 'diabetes']]

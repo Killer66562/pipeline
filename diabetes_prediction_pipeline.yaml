@@ -141,17 +141,17 @@ deploymentSpec:
         - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
           \ *\n\ndef load_data(data_output: Output[Artifact]):\n    import pandas\
           \ as pd\n\n    url = \"https://raw.githubusercontent.com/daniel88516/diabetes-data/main/10k.csv\"\
-          \n    df_data = pd.read_csv(url)\n\n    df_data = df_data[0:5000]\n\n  \
-          \  df_data = df_data.drop(df_data[df_data['diabetes'] == 'No Info'].index)\n\
-          \    df_data = df_data[['gender','age', 'bmi', 'HbA1c_level', 'blood_glucose_level',\
-          \ 'diabetes']]\n    df_data = df_data.dropna(thresh=4)\n\n    gender_map\
-          \ = {'Male': 0 , 'Female': 1  , 'Other': 2}\n    df_data['gender'] = df_data['gender'].map(gender_map)\n\
-          \    df_data = df_data[df_data['gender'] != 2]\n    df_data['age'] = df_data['age'].replace('No\
-          \ Info', df_data['age'].mean())\n    df_data['bmi'] = df_data['bmi'].replace('No\
-          \ Info', df_data['bmi'].mean())\n    df_data['HbA1c_level'] = df_data['HbA1c_level'].replace('No\
-          \ Info', df_data['HbA1c_level'].mean())\n    df_data['blood_glucose_level']\
-          \ = df_data['blood_glucose_level'].replace('No Info', df_data['blood_glucose_level'].mean())\n\
-          \n    df_data.to_csv(data_output.path)\n\n"
+          \n    df_data = pd.read_csv(url)\n\n    df_data = df_data.drop(df_data[df_data['diabetes']\
+          \ == 'No Info'].index)\n    df_data = df_data[['gender','age', 'bmi', 'HbA1c_level',\
+          \ 'blood_glucose_level', 'diabetes']]\n    df_data = df_data.dropna(thresh=4)\n\
+          \n    gender_map = {'Male': 0 , 'Female': 1  , 'Other': 2}\n    df_data['gender']\
+          \ = df_data['gender'].map(gender_map)\n    df_data = df_data[df_data['gender']\
+          \ != 2]\n    df_data['age'] = df_data['age'].replace('No Info', df_data['age'].mean())\n\
+          \    df_data['bmi'] = df_data['bmi'].replace('No Info', df_data['bmi'].mean())\n\
+          \    df_data['HbA1c_level'] = df_data['HbA1c_level'].replace('No Info',\
+          \ df_data['HbA1c_level'].mean())\n    df_data['blood_glucose_level'] = df_data['blood_glucose_level'].replace('No\
+          \ Info', df_data['blood_glucose_level'].mean())\n\n    df_data.to_csv(data_output.path)\n\
+          \n"
         image: python:3.9
     exec-prepare-data:
       container:
